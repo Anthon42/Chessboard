@@ -17,10 +17,10 @@ class Chessboard extends StatelessWidget {
       List<ChessPosition> row = List<ChessPosition>();
       while (currentRow <= context.watch<ChessboardData>().getRowCount - 1) {
         if (((currentColumn % 2) != 0) && (currentRow % 2) != 0) {
-          _color = Colors.black;
+          _color = Colors.brown;
         } else {
           if (((currentColumn % 2) == 0) && (currentRow % 2) == 0) {
-            _color = Colors.black;
+            _color = Colors.brown;
           } else
             _color = Colors.white;
         }
@@ -33,13 +33,10 @@ class Chessboard extends StatelessWidget {
       ));
       currentColumn++;
     }
-    return Stack(
-      children: [
-        Column(
-          children: line,
-        ),
-      ],
-      alignment: Alignment.center,
+    return Card(
+      child: Column(
+        children: line,
+      ),
     );
   }
 }
@@ -78,78 +75,83 @@ class ChessPositionState extends State<ChessPosition> {
     String caption = context.watch<ChessboardData>().getMap[_id] == null
         ? ('')
         : (context.watch<ChessboardData>().getMap[_id].toString());
-    return ButtonTheme(
+    return SizedBox(
+      width: 50,
+      height: 50,
       child: RaisedButton(
         child: Text(caption),
         textColor: Colors.blue,
         onPressed: () {
           if (context.read<ChessboardData>().getIsFinished)
-            setState(() async {
-              if ((isSelected == false) &&
-                  ((_color == Colors.white) || (_color == Colors.black))) {
-                _color = Colors.red;
-                isSelected = true;
+            setState(
+              () async {
+                if ((isSelected == false) &&
+                    ((_color == Colors.white) || (_color == Colors.brown))) {
+                  _color = Colors.red;
+                  isSelected = true;
 
-                var myMap = Map<String, int>();
-                for (int column = 0;
-                    column < context.read<ChessboardData>().getColumnCount;
-                    column++) {
-                  for (int row = 0;
-                      row < context.read<ChessboardData>().getRowCount;
-                      row++) {
-                    myMap['$column$row'] = 0;
+                  var myMap = Map<String, int>();
+                  for (int column = 0;
+                      column < context.read<ChessboardData>().getColumnCount;
+                      column++) {
+                    for (int row = 0;
+                        row < context.read<ChessboardData>().getRowCount;
+                        row++) {
+                      myMap['$column$row'] = 0;
+                    }
                   }
+
+                  var beginDate = DateTime.now();
+
+                  var paramCompute = Map<String, int>();
+
+                  paramCompute['startPositionX'] = int.parse(_id[0]);
+                  paramCompute['startPositionY'] = int.parse(_id[1]);
+                  paramCompute['columnCount'] =
+                      context.read<ChessboardData>().getColumnCount;
+                  paramCompute['rowCount'] =
+                      context.read<ChessboardData>().getRowCount;
+
+                  var param = Map<int, Map>();
+
+                  param[0] = paramCompute;
+                  param[1] = myMap;
+
+                  context.read<ChessboardData>().setIsFinished = false;
+                  if ((context.read<ChessboardData>().getColumnCount *
+                          context.read<ChessboardData>().getRowCount >
+                      24)) {
+                    myMap = await compute(v2.computeRoute, param)
+                        as Map<String, int>;
+                  } else
+                    myMap =
+                        await compute(computeRoute, param) as Map<String, int>;
+
+                  context.read<ChessboardData>().setIsFinished = true;
+
+                  var endDate = DateTime.now();
+
+                  if (myMap != null) {
+                    context.read<ChessboardData>().setMap = myMap;
+                  }
+                  context.read<ChessboardData>().setIsFinished = true;
+                  context.read<ChessboardData>().setComputeTime =
+                      endDate.difference(beginDate).inMilliseconds;
+                  return null;
                 }
 
-                var beginDate = DateTime.now();
+                if ((isSelected == true) && (_color == Colors.red)) {
+                  isSelected = false;
+                  _color = _oldColor;
 
-                var paramCompute = Map<String, int>();
-
-                paramCompute['startPositionX'] = int.parse(_id[0]);
-                paramCompute['startPositionY'] = int.parse(_id[1]);
-                paramCompute['columnCount'] =
-                    context.read<ChessboardData>().getColumnCount;
-                paramCompute['rowCount'] =
-                    context.read<ChessboardData>().getRowCount;
-
-                var param = Map<int, Map>();
-
-                param[0] = paramCompute;
-                param[1] = myMap;
-
-                context.read<ChessboardData>().setIsFinished = false;
-                if ((context.read<ChessboardData>().getColumnCount * context.read<ChessboardData>().getRowCount > 24)) {
-                  myMap = await compute(v2.computeRoute, param) as Map<String, int>;
-                } else
-                  myMap =
-                      await compute(computeRoute, param) as Map<String, int>;
-
-                context.read<ChessboardData>().setIsFinished = true;
-
-                var endDate = DateTime.now();
-
-                if (myMap != null) {
-                  context.read<ChessboardData>().setMap = myMap;
+                  context.read<ChessboardData>().setMap = Map();
+                  return null;
                 }
-                context.read<ChessboardData>().setIsFinished = true;
-                context.read<ChessboardData>().setComputeTime =
-                    endDate.difference(beginDate).inMilliseconds;
-                return null;
-              }
-
-              if ((isSelected == true) && (_color == Colors.red)) {
-                isSelected = false;
-                _color = _oldColor;
-
-                context.read<ChessboardData>().setMap = Map();
-                return null;
-              }
-            });
+              },
+            );
         },
         color: _color,
       ),
-      height: 45,
-      minWidth: 45,
     );
   }
 }

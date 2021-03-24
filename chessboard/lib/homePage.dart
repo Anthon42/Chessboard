@@ -16,31 +16,31 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Chessboard'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
         children: [
-          ConfigureBoardSizeBox(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
             children: [
-              Card(
-                child: Stack(
-                  children: [
-                    SafeArea(child: Chessboard()),
-                    context.watch<ChessboardData>().getIsFinished == false
-                        ? CircularProgressIndicator()
-                        : Center()
-                  ],
-                  alignment: Alignment.center,
+              ConfigureBoardSizeBox(),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Chessboard(),
+                  ),
+                ),
+              ),
+              Center(
+                child: Text(
+                  'Время решения: ${context.watch<ChessboardData>().getComputeTime} мс',
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
             ],
-          ),
-          Center(
-            child: Text(
-              'Время решения: ${context.watch<ChessboardData>().getComputeTime} мс',
-              style: TextStyle(fontSize: 16),
-            ),
+          ), Center(
+            child: context.watch<ChessboardData>().getIsFinished == false
+                ? CircularProgressIndicator()
+                : Center(),
           ),
         ],
       ),

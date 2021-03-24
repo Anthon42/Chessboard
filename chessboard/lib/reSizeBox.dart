@@ -77,6 +77,10 @@ class _ReSizeBoxState extends State<ReSizeBox> {
           child: Text('8'),
           value: 8,
         ),
+        DropdownMenuItem(
+          child: Text('9'),
+          value: 9,
+        )
       ],
     );
   }
